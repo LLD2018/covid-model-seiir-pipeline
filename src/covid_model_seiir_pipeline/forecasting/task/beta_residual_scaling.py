@@ -72,6 +72,7 @@ def run_compute_beta_scaling_parameters(forecast_version: str, scenario_name: st
     total_deaths = total_deaths[total_deaths.location_id.isin(locations)].set_index('location_id')['deaths']
 
     beta_scaling = forecast_spec.scenarios[scenario_name].beta_scaling
+
     scaling_data = compute_initial_beta_scaling_paramters(total_deaths, beta_scaling, data_interface)
     residual_mean_offset = compute_residual_mean_offset(scaling_data, beta_scaling, total_deaths)
     write_out_beta_scale(scaling_data, residual_mean_offset, scenario_name, data_interface)
@@ -145,8 +146,19 @@ def compute_initial_beta_scaling_parameters_by_draw(draw_id: int,
     # Construct a list of pandas Series indexed by location and named
     # as their column will be in the output dataframe. We'll append
     # to this list as we construct the parameters.
-    draw_data = [total_deaths.copy(),
-                 pd.Series(beta_scaling['window_size'], index=total_deaths.index, name='window_size')]
+    window_size = data_interface.load_parameter('window_size', beta_scaling['window_size'], draw_id,
+                                                default_specification=42)
+    average_over_min = data_interface.load_parameter('average_over_min', beta_scaling['average_over_min'], draw_id,
+                                                     default_specification=7)
+    average_over_max = data_interface.load_parameter('average_over_max', beta_scaling['average_over_max'], draw_id,
+                                                     default_specification=42)
+
+    draw_data = [
+        total_deaths.copy(),
+        window_size,
+        average_over_min,
+        average_over_max
+    ]
 
     # Today in the data is unique by draw.  It's a combination of the
     # number of predicted days from the elastispliner in the ODE fit
@@ -167,11 +179,15 @@ def compute_initial_beta_scaling_parameters_by_draw(draw_id: int,
     # Compute the beta residual mean for our parameterization and hang on
     # to some ancillary information that may be useful for plotting/debugging.
     rs = np.random.RandomState(draw_id)
-    a = rs.randint(1, beta_scaling['average_over_min'])
-    b = rs.randint(a + 7, beta_scaling['average_over_max'])
+    a = pd.Series(rs.randint(np.ones_like(average_over_min), average_over_min),
+                  index=average_over_min.index,
+                  name='history_days_start')
+    b = pd.Series(rs.randint(a + 7, average_over_max),
+                  index=average_over_max.index,
+                  name='history_days_end')
 
-    draw_data.append(pd.Series(a, index=total_deaths.index, name='history_days_start'))
-    draw_data.append(pd.Series(b, index=total_deaths.index, name='history_days_end'))
+    draw_data.append(a)
+    draw_data.append(b)
 
     beta_past = (beta_regression_df
                  .loc[beta_regression_df['date'] <= transition_date.loc[idx]]
@@ -179,10 +195,17 @@ def compute_initial_beta_scaling_parameters_by_draw(draw_id: int,
                  .set_index(['location_id', 'date'])
                  .sort_index())
 
-    log_beta_resid_mean = (np.log(beta_past['beta'] / beta_past['beta_pred'])
-                           .groupby(level='location_id')
-                           .apply(lambda x: x.iloc[-b: -a].mean())
-                           .rename('log_beta_residual_mean'))
+    log_beta_resid = np.log(beta_past['beta'] / beta_past['beta_pred'])
+
+    log_beta_resid_mean = {}
+    for location_id, loc_log_beta_resid in log_beta_resid.groupby('location_id'):
+        loc_a = a.loc[location_id]
+        loc_b = b.loc[location_id]
+        loc_resid_mean = loc_log_beta_resid.iloc[-loc_b:-loc_a].mean()
+        log_beta_resid_mean[location_id] = loc_resid_mean
+    log_beta_resid_mean = pd.Series(log_beta_resid_mean, name='log_beta_residual_mean')
+    log_beta_resid_mean.index.name = 'location_id'
+
     draw_data.append(log_beta_resid_mean)
     draw_data.append(pd.Series(draw_id, index=total_deaths.index, name='draw'))
 

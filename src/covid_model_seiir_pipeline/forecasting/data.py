@@ -64,25 +64,47 @@ class ForecastDataInterface:
             location_ids = yaml.full_load(location_file)
         return location_ids
 
-    def load_thetas(self, theta_specification: Union[str, float],
-                    draw_id: int, default_specification: float) -> pd.Series:
+    def load_parameter(self,
+                       parameter: str,
+                       parameter_specification: Union[str, float],
+                       draw_id: int,
+                       default_specification: float) -> pd.Series:
+        """Get a location specific parameter for the draw.
+
+        Parameters
+        ----------
+        parameter
+            The name of the parameter to draw.
+        parameter_specification
+            Either a file path to draw-specific parameters or a float
+            containing the default value.
+        draw_id
+            The draw number to load.
+        default_specification
+            A default value.
+
+        Returns
+        -------
+            A series named after the provided parameter name with a value
+            for each location.
+
+        """
         full_loc_index = pd.Index(self.load_location_ids(), name='location_id')
 
-        if isinstance(theta_specification, str):
-            params = pd.read_csv(theta_specification).set_index('location_id')
-            thetas = params.loc[params['parameter'] == 'theta', f'draw_{draw_id}'].rename('theta')
+        if isinstance(parameter_specification, str):
+            params = pd.read_csv(parameter_specification).set_index('location_id')
+            param = params.loc[params['parameter'] == parameter, f'draw_{draw_id}'].rename(parameter)
         else:
-            thetas = pd.Series(theta_specification,
-                               index=full_loc_index,
-                               name='theta')
+            param = pd.Series(parameter_specification,
+                              index=full_loc_index,
+                              name=parameter)
 
-        default_thetas = pd.Series(default_specification,
-                                   index=full_loc_index.difference(thetas.index),
-                                   name='theta')
-        thetas.append(default_thetas)
-        thetas = thetas.loc[full_loc_index]
-
-        return thetas
+        default_param = pd.Series(default_specification,
+                                  index=full_loc_index.difference(param.index),
+                                  name=parameter)
+        param.append(default_param)
+        param = param.loc[full_loc_index]
+        return param
 
     def check_covariates(self, scenarios: Dict[str, ScenarioSpecification]) -> List[str]:
         with self.regression_paths.regression_specification.open() as regression_spec_file:
