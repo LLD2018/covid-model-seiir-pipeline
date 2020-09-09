@@ -165,6 +165,7 @@ class RegressionDataInterface:
                           index=param_index,
                           name=parameter)
 
+        # Fill in defaults in case we didn't produce them in an input file.
         default_lower, default_upper = default_specification
         seed = utilities.get_hash(f'default_{parameter}_{draw_id}')
         rs = np.random.RandomState(seed)
@@ -172,6 +173,8 @@ class RegressionDataInterface:
                                   index=full_loc_index.difference(param.index),
                                   name=parameter)
         param = param.append(default_param)
+        # Subset just to the locations we're modeling.
+        param = param.loc[full_loc_index]
 
         return param
 

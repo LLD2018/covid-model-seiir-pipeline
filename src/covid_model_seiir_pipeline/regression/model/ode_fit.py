@@ -349,7 +349,7 @@ class ODEProcess:
         df_params = pd.concat(
             [self.alpha, self.sigma, self.gamma1, self.gamma2, self.day_shift],
             axis=1
-        )
+        ).reset_index()
         return df_params
 
     def create_start_end_date_df(self):
