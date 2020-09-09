@@ -25,7 +25,7 @@ def run_beta_forecast(draw_id: int, forecast_version: str, scenario_name: str):
     location_ids = data_interface.load_location_ids()
     # Thetas are a parameter generated from assumption or OOS predictive
     # validity testing to curtail some of the bad behavior of the model.
-    thetas = data_interface.load_thetas(scenario_spec.theta, draw_id)
+    thetas = data_interface.load_thetas(scenario_spec.theta, draw_id, default_specification=0)
     # Grab the last day of data in the model by location id.  This will
     # correspond to the initial condition for the projection.
     transition_date = data_interface.load_transition_date(draw_id)
@@ -71,7 +71,7 @@ def run_beta_forecast(draw_id: int, forecast_version: str, scenario_name: str):
                                                                location_ids, scenario_spec.solver)
     logger.info('Processing ODE results and computing deaths and infections.')
     components = model.splice_components(past_components, future_components)
-    components['theta'] = thetas.reindex(components.index).fillna(0)
+    components['theta'] = thetas.reindex(components.index)
     infections, deaths, r_effective = model.compute_output_metrics(infection_data, components, beta_params)
 
     if scenario_spec.algorithm == 'mandate_reimposition':

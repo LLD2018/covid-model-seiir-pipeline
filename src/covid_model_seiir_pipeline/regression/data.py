@@ -147,7 +147,7 @@ class RegressionDataInterface:
             for each location.
 
         """
-        full_loc_index = pd.Index(self.load_location_ids())
+        full_loc_index = pd.Index(self.load_location_ids(), name='location_id')
 
         if isinstance(parameter_specification, str):
             params = pd.read_csv(parameter_specification).set_index('location_id')

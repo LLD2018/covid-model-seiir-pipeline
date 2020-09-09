@@ -131,7 +131,7 @@ def run_normal_ode_model_by_location(initial_condition, beta_params, betas, thet
         loc_days = loc_betas['date']
         loc_times = np.array((loc_days - loc_days.min()).dt.days)
         loc_betas = loc_betas['beta_pred'].values
-        loc_thetas = np.repeat(thetas.get(location_id, default=0), loc_betas.size)
+        loc_thetas = np.repeat(thetas.loc[location_id], loc_betas.size)
 
         forecasted_components = ode_runner.get_solution(init_cond, loc_times, loc_betas, loc_thetas)
         forecasted_components['date'] = loc_days.values
