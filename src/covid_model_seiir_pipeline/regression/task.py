@@ -37,12 +37,17 @@ def run_beta_regression(draw_id: int, regression_version: str) -> None:
         col_loc_id=INFECTION_COL_DICT['COL_LOC_ID'],
         col_lag_days=INFECTION_COL_DICT['COL_ID_LAG'],
         col_observed=INFECTION_COL_DICT['COL_OBS_DEATHS'],
-        alpha=data_interface.load_parameter('alpha', regression_specification.parameters.alpha, draw_id),
-        sigma=data_interface.load_parameter('sigma', regression_specification.parameters.alpha, draw_id),
-        gamma1=data_interface.load_parameter('gamma1', regression_specification.parameters.alpha, draw_id),
-        gamma2=data_interface.load_parameter('gamma2', regression_specification.parameters.alpha, draw_id),
+        alpha=data_interface.load_parameter('alpha', regression_specification.parameters.alpha, draw_id,
+                                            default_specification=[0.9, 1.0]),
+        sigma=data_interface.load_parameter('sigma', regression_specification.parameters.alpha, draw_id,
+                                            default_specification=[0.2, 0.3333]),
+        gamma1=data_interface.load_parameter('gamma1', regression_specification.parameters.alpha, draw_id,
+                                             default_specification=[0.5, 0.5]),
+        gamma2=data_interface.load_parameter('gamma2', regression_specification.parameters.alpha, draw_id,
+                                             default_specification=[0.3333, 1.0]),
         solver_dt=regression_specification.parameters.solver_dt,
-        day_shift=data_interface.load_parameter('day_shift', regression_specification.parameters.alpha, draw_id),
+        day_shift=data_interface.load_parameter('day_shift', regression_specification.parameters.alpha, draw_id,
+                                                default_specification=[0, 8]),
     )
     ode_model = model.ODEProcess(beta_fit_inputs)
     beta_fit = ode_model.process()

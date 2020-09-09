@@ -122,8 +122,9 @@ class RegressionDataInterface:
     def load_parameter(self,
                        parameter: str,
                        parameter_specification: Union[str, List[float]],
-                       draw_id: int) -> pd.Series:
-        """Get a location specific alpha parameter for the draw.
+                       draw_id: int,
+                       default_specification: List[float]) -> pd.Series:
+        """Get a location specific parameter for the draw.
 
         Parameters
         ----------
@@ -135,6 +136,10 @@ class RegressionDataInterface:
             to draw alpha.
         draw_id
             The draw number to load.
+        default_specification
+            An upper and lower bound to use to fill values not present
+            in the dataset when ``parameter_specification`` is a file
+            path.
 
         Returns
         -------
@@ -142,6 +147,8 @@ class RegressionDataInterface:
             for each location.
 
         """
+        full_loc_index = pd.Index(self.load_location_ids())
+
         if isinstance(parameter_specification, str):
             params = pd.read_csv(parameter_specification).set_index('location_id')
             param_upper = params.loc[params['parameter'] == f'{parameter}_upper', f'draw_{draw_id}']
@@ -149,7 +156,7 @@ class RegressionDataInterface:
             param_index = param_upper.index
         else:
             param_lower, param_upper = parameter_specification
-            param_index = self.load_location_ids()
+            param_index = full_loc_index
 
         seed = utilities.get_hash(f'{parameter}_{draw_id}')
         rs = np.random.RandomState(seed)
@@ -157,6 +164,15 @@ class RegressionDataInterface:
         param = pd.Series(rs.uniform(param_lower, param_upper),
                           index=param_index,
                           name=parameter)
+
+        default_lower, default_upper = default_specification
+        seed = utilities.get_hash(f'default_{parameter}_{draw_id}')
+        rs = np.random.RandomState(seed)
+        default_param = pd.Series(rs.uniform(default_lower, default_upper),
+                                  index=full_loc_index.difference(param.index),
+                                  name=parameter)
+        param = param.append(default_param)
+
         return param
 
     ###########################
