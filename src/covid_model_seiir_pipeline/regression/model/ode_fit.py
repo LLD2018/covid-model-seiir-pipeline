@@ -297,12 +297,11 @@ class ODEProcess:
         # create the location id
         self.loc_ids = np.sort(list(self.df_dict.keys()))
 
-        # sampling the parameters here
         self.alpha = ode_process_input.alpha
         self.sigma = ode_process_input.sigma
         self.gamma1 = ode_process_input.gamma1
         self.gamma2 = ode_process_input.gamma2
-        self.day_shift = ode_process_input.day_shift
+        self.day_shift = ode_process_input.day_shift.astype(int)
 
         # lag days
         self.lag_days = self.df_dict[self.loc_ids[0]][

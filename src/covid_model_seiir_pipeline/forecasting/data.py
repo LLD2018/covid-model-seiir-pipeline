@@ -242,7 +242,7 @@ class ForecastDataInterface:
 
     def load_beta_params(self, draw_id: int) -> Dict[str, float]:
         df = self.regression_marshall.load(key=MKeys.parameter(draw_id=draw_id))
-        return df.set_index('params')['values'].to_dict()
+        return df.set_index('location_id')
 
     def save_components(self, forecasts: pd.DataFrame, scenario: str, draw_id: int):
         self.forecast_marshall.dump(forecasts, key=MKeys.components(scenario=scenario, draw_id=draw_id))

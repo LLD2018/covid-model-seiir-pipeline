@@ -25,7 +25,7 @@ def run_beta_forecast(draw_id: int, forecast_version: str, scenario_name: str):
     location_ids = data_interface.load_location_ids()
     # Thetas are a parameter generated from assumption or OOS predictive
     # validity testing to curtail some of the bad behavior of the model.
-    thetas = data_interface.load_thetas(scenario_spec.theta, draw_id, default_specification=0)
+    thetas = data_interface.load_parameter('theta', scenario_spec.theta, draw_id, default_specification=0)
     # Grab the last day of data in the model by location id.  This will
     # correspond to the initial condition for the projection.
     transition_date = data_interface.load_transition_date(draw_id)

@@ -119,10 +119,10 @@ def run_normal_ode_model_by_location(initial_condition, beta_params, betas, thet
         total_population = init_cond.sum()
 
         model_specs = SeiirModelSpecs(
-            alpha=beta_params['alpha'],
-            sigma=beta_params['sigma'],
-            gamma1=beta_params['gamma1'],
-            gamma2=beta_params['gamma2'],
+            alpha=beta_params.loc[location_id, 'alpha'],
+            sigma=beta_params.loc[location_id, 'sigma'],
+            gamma1=beta_params.loc[location_id, 'gamma1'],
+            gamma2=beta_params.loc[location_id, 'gamma2'],
             N=total_population,
         )
         ode_runner = ODERunner(solver, model_specs)
