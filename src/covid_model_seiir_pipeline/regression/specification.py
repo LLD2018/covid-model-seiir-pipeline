@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Dict, Tuple, List
+from typing import Dict, Tuple, List, Union
 
 from covid_model_seiir_pipeline.utilities import Specification, asdict
 
@@ -25,10 +25,10 @@ class FitParameters:
 
     day_shift: Tuple[int, int] = field(default=(0, 8))
 
-    alpha: Tuple[float, float] = field(default=(0.9, 1.0))
-    sigma: Tuple[float, float] = field(default=(0.2, 1/3))
-    gamma1: Tuple[float, float] = field(default=(0.5, 0.5))
-    gamma2: Tuple[float, float] = field(default=(1/3, 1.0))
+    alpha: Union[Tuple[float, float], str] = field(default=(0.9, 1.0))
+    sigma: Union[Tuple[float, float], str] = field(default=(0.2, 1/3))
+    gamma1: Union[Tuple[float, float], str] = field(default=(0.5, 0.5))
+    gamma2: Union[Tuple[float, float], str] = field(default=(1/3, 1.0))
     solver_dt: float = field(default=0.1)
 
     def to_dict(self) -> Dict:

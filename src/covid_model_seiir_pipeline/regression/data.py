@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Dict, List, Iterable, Optional, Union
 
 from loguru import logger
+import numpy as np
 import pandas as pd
 import yaml
 
@@ -10,7 +11,7 @@ from covid_model_seiir_pipeline.marshall import (
     CSVMarshall,
     Keys as MKeys,
 )
-from covid_model_seiir_pipeline import paths
+from covid_model_seiir_pipeline import paths, utilities
 from covid_model_seiir_pipeline.regression.specification import RegressionSpecification
 
 
@@ -113,6 +114,50 @@ class RegressionDataInterface:
             dfs[loc] = loc_df
 
         return dfs
+
+    #####################
+    # Parameter loaders #
+    #####################
+
+    def load_parameter(self,
+                       parameter: str,
+                       parameter_specification: Union[str, List[float]],
+                       draw_id: int) -> pd.Series:
+        """Get a location specific alpha parameter for the draw.
+
+        Parameters
+        ----------
+        parameter
+            The name of the parameter to draw.
+        parameter_specification
+            Either a file path to draw-specific parameters or a list containing
+            the upper and lower bound of a uniform distribution from which
+            to draw alpha.
+        draw_id
+            The draw number to load.
+
+        Returns
+        -------
+            A series named after the provided parameter name with a value
+            for each location.
+
+        """
+        if isinstance(parameter_specification, str):
+            params = pd.read_csv(parameter_specification).set_index('location_id')
+            param_upper = params.loc[params['parameter'] == f'{parameter}_upper', f'draw_{draw_id}']
+            param_lower = params.loc[params['parameter'] == f'{parameter}_lower', f'draw_{draw_id}']
+            param_index = param_upper.index
+        else:
+            param_lower, param_upper = parameter_specification
+            param_index = self.load_location_ids()
+
+        seed = utilities.get_hash(f'{parameter}_{draw_id}')
+        rs = np.random.RandomState(seed)
+
+        param = pd.Series(rs.uniform(param_lower, param_upper),
+                          index=param_index,
+                          name=parameter)
+        return param
 
     ###########################
     # Covariate paths loaders #

@@ -1,8 +1,9 @@
 from __future__ import annotations
 import abc
 from dataclasses import asdict as asdict_
+import hashlib
 from pathlib import Path
-from typing import Any, Dict, Union, Optional, Tuple, TypeVar
+from typing import Any, Dict, Union, Optional, Tuple
 from pprint import pformat
 
 from covid_shared import paths, shell_tools, cli_tools
@@ -175,3 +176,18 @@ def make_log_dirs(output_dir: Union[str, Path], prefix: str = None) -> Tuple[str
     shell_tools.mkdir(std_err, exists_ok=True, parents=True)
 
     return str(std_out), str(std_err)
+
+
+def get_hash(key: str) -> int:
+    """Gets a hash of the provided key.
+    Parameters
+    ----------
+    key :
+        A string used to create a seed for the random number generator.
+    Returns
+    -------
+    int
+        A hash of the provided key.
+    """
+    # 4294967295 == 2**32 - 1 which is the maximum allowable seed for a `numpy.random.RandomState`.
+    return int(hashlib.sha1(key.encode('utf8')).hexdigest(), 16) % 4294967295

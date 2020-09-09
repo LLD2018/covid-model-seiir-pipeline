@@ -4,10 +4,9 @@
     ~~~~~~~~~~~~
 """
 from dataclasses import dataclass
-from typing import Dict, Tuple
+from typing import Dict
 import numpy as np
 import pandas as pd
-from datetime import datetime
 from odeopt.ode import RK4
 from odeopt.ode import LinearFirstOrder
 from odeopt.core.utils import linear_interpolate
@@ -20,13 +19,13 @@ class SingleGroupODEProcess:
                  col_cases,
                  col_pop,
                  col_loc_id,
-                 today=np.datetime64(datetime.today()),
-                 day_shift=(8,)*2,
-                 lag_days=17,
-                 alpha=(0.95,)*2,
-                 sigma=(0.2,)*2,
-                 gamma1=(0.5,)*2,
-                 gamma2=(0.5,)*2,
+                 today,
+                 day_shift,
+                 lag_days,
+                 alpha,
+                 sigma,
+                 gamma1,
+                 gamma2,
                  solver_class=RK4,
                  solver_dt=1e-1):
         """Constructor of the SingleGroupODEProcess
@@ -58,28 +57,17 @@ class SingleGroupODEProcess:
 
         self.loc_id = df[self.col_loc_id].values[0]
 
-        # ODE parameters
-        assert len(alpha) == 2 and \
-               0.0 <= alpha[0] <= alpha[1]
-        assert len(sigma) == 2 and \
-               0.0 <= sigma[0] <= sigma[1]
-        assert len(gamma1) == 2 and \
-               0.0 <= gamma1[0] <= gamma1[1]
-        assert len(gamma2) == 2 and \
-               0.0 <= gamma2[0] <= gamma2[1]
-        self.alpha = np.random.uniform(*alpha)
-        self.sigma = np.random.uniform(*sigma)
-        self.gamma1 = np.random.uniform(*gamma1)
-        self.gamma2 = np.random.uniform(*gamma2)
+        self.alpha = alpha
+        self.sigma = sigma
+        self.gamma1 = gamma1
+        self.gamma2 = gamma2
         self.N = df[self.col_pop].values[0]
 
-        assert len(day_shift) == 2 and \
-            day_shift[0] <= day_shift[1]
+        self.today = today
+        self.day_shift = day_shift
+        self.lag_days = lag_days
 
         # subset the data
-        self.today = today
-        self.day_shift = int(np.random.uniform(*day_shift))
-        self.lag_days = lag_days
         df.sort_values(self.col_date, inplace=True)
         date = pd.to_datetime(df[col_date])
         # cast this from numpy.int64 to int because travis/tox was erroring on
@@ -279,42 +267,42 @@ class ODEProcessInput:
     col_lag_days: str
     col_observed: str
 
-    alpha: Tuple
-    sigma: Tuple
-    gamma1: Tuple
-    gamma2: Tuple
+    alpha: pd.Series
+    sigma: pd.Series
+    gamma1: pd.Series
+    gamma2: pd.Series
     solver_dt: float
-    day_shift: Tuple
+    day_shift: pd.Series
 
 
 class ODEProcess:
     """ODE Process for multiple group.
     """
-    def __init__(self, input):
+    def __init__(self, ode_process_input: ODEProcessInput):
         """Constructor of ODEProcess.
 
         Args:
-            input: ODEProcessInput
+            ode_process_input: ODEProcessInput
         """
-        self.df_dict = input.df_dict
-        self.col_date = input.col_date
-        self.col_cases = input.col_cases
-        self.col_pop = input.col_pop
-        self.col_loc_id = input.col_loc_id
-        self.col_lag_days = input.col_lag_days
-        self.col_observed = input.col_observed
+        self.df_dict = ode_process_input.df_dict
+        self.col_date = ode_process_input.col_date
+        self.col_cases = ode_process_input.col_cases
+        self.col_pop = ode_process_input.col_pop
+        self.col_loc_id = ode_process_input.col_loc_id
+        self.col_lag_days = ode_process_input.col_lag_days
+        self.col_observed = ode_process_input.col_observed
 
-        self.solver_dt = input.solver_dt
+        self.solver_dt = ode_process_input.solver_dt
 
         # create the location id
         self.loc_ids = np.sort(list(self.df_dict.keys()))
 
         # sampling the parameters here
-        self.alpha = np.random.uniform(*input.alpha)
-        self.sigma = np.random.uniform(*input.sigma)
-        self.gamma1 = np.random.uniform(*input.gamma1)
-        self.gamma2 = np.random.uniform(*input.gamma2)
-        self.day_shift = int(np.random.uniform(*input.day_shift))
+        self.alpha = ode_process_input.alpha
+        self.sigma = ode_process_input.sigma
+        self.gamma1 = ode_process_input.gamma1
+        self.gamma2 = ode_process_input.gamma2
+        self.day_shift = ode_process_input.day_shift
 
         # lag days
         self.lag_days = self.df_dict[self.loc_ids[0]][
@@ -328,33 +316,22 @@ class ODEProcess:
 
         # create model for each location
         self.models = {}
-        errors = []
         for loc_id in self.loc_ids:
- #           try:
-                self.models[loc_id] = SingleGroupODEProcess(
-                    self.df_dict[loc_id],
-                    self.col_date,
-                    self.col_cases,
-                    self.col_pop,
-                    self.col_loc_id,
-                    day_shift=(self.day_shift,)*2,
-                    lag_days=self.lag_days,
-                    alpha=(self.alpha,)*2,
-                    sigma=(self.sigma,)*2,
-                    gamma1=(self.gamma1,)*2,
-                    gamma2=(self.gamma2,)*2,
-                    solver_class=RK4,
-                    solver_dt=self.solver_dt,
-                    today=self.today_dict[loc_id],
-                )
-  #          except AssertionError:
-  #              errors.append(loc_id)
-
-  #      if errors:
-  #          raise RuntimeError(
-  #              "SingleGroupODEProcess failed to initialize for 1 or more locations in "
-  #              f"ODEProcess. Locations are: {errors}."
-  #          )
+            self.models[loc_id] = SingleGroupODEProcess(
+                self.df_dict[loc_id],
+                self.col_date,
+                self.col_cases,
+                self.col_pop,
+                self.col_loc_id,
+                day_shift=self.day_shift.loc[loc_id],
+                lag_days=self.lag_days,
+                alpha=self.alpha.loc[loc_id],
+                sigma=self.sigma.loc[loc_id],
+                gamma1=self.gamma1.loc[loc_id],
+                gamma2=self.gamma2.loc[loc_id],
+                solver_dt=self.solver_dt,
+                today=self.today_dict[loc_id],
+            )
 
     def process(self):
         """Process all models.
@@ -369,11 +346,10 @@ class ODEProcess:
     def create_params_df(self):
         """Create parameter DataFrame.
         """
-        df_params = pd.DataFrame({
-            'params': ['alpha', 'sigma', 'gamma1', 'gamma2', 'day_shift'],
-            'values': [self.alpha, self.sigma, self.gamma1, self.gamma2, self.day_shift]
-        })
-
+        df_params = pd.concat(
+            [self.alpha, self.sigma, self.gamma1, self.gamma2, self.day_shift],
+            axis=1
+        )
         return df_params
 
     def create_start_end_date_df(self):

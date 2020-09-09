@@ -64,9 +64,10 @@ class ForecastDataInterface:
             location_ids = yaml.full_load(location_file)
         return location_ids
 
-    def load_thetas(self, theta_specification: Union[str, int]) -> pd.Series:
+    def load_thetas(self, theta_specification: Union[str, int], draw_id: int) -> pd.Series:
         if isinstance(theta_specification, str):
-            thetas = pd.read_csv(theta_specification).set_index('location_id')['theta']
+            params = pd.read_csv(theta_specification).set_index('location_id')
+            thetas = params.loc[params['parameter'] == 'theta', f'draw_{draw_id}'].rename('theta')
         else:
             location_ids = self.load_location_ids()
             thetas = pd.Series(theta_specification,

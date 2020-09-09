@@ -29,7 +29,6 @@ def run_beta_regression(draw_id: int, regression_version: str) -> None:
     covariates = data_interface.load_covariates(regression_specification.covariates, location_ids)
 
     # Run ODE fit
-    np.random.seed(draw_id)
     beta_fit_inputs = model.ODEProcessInput(
         df_dict=location_data,
         col_date=INFECTION_COL_DICT['COL_DATE'],
@@ -38,12 +37,12 @@ def run_beta_regression(draw_id: int, regression_version: str) -> None:
         col_loc_id=INFECTION_COL_DICT['COL_LOC_ID'],
         col_lag_days=INFECTION_COL_DICT['COL_ID_LAG'],
         col_observed=INFECTION_COL_DICT['COL_OBS_DEATHS'],
-        alpha=regression_specification.parameters.alpha,
-        sigma=regression_specification.parameters.sigma,
-        gamma1=regression_specification.parameters.gamma1,
-        gamma2=regression_specification.parameters.gamma2,
+        alpha=data_interface.load_parameter('alpha', regression_specification.parameters.alpha, draw_id),
+        sigma=data_interface.load_parameter('sigma', regression_specification.parameters.alpha, draw_id),
+        gamma1=data_interface.load_parameter('gamma1', regression_specification.parameters.alpha, draw_id),
+        gamma2=data_interface.load_parameter('gamma2', regression_specification.parameters.alpha, draw_id),
         solver_dt=regression_specification.parameters.solver_dt,
-        day_shift=regression_specification.parameters.day_shift,
+        day_shift=data_interface.load_parameter('day_shift', regression_specification.parameters.alpha, draw_id),
     )
     ode_model = model.ODEProcess(beta_fit_inputs)
     beta_fit = ode_model.process()
