@@ -102,7 +102,7 @@ class ForecastDataInterface:
         default_param = pd.Series(default_specification,
                                   index=full_loc_index.difference(param.index),
                                   name=parameter)
-        param.append(default_param)
+        param = param.append(default_param)
         param = param.loc[full_loc_index]
         return param
 

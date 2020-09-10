@@ -1,6 +1,6 @@
 data:
   regression_version: 'latest'
-  covariate_version: '2020_08_27.04'
+  covariate_version: '2020_09_03.01'
   output_root: ''
 scenarios:
   worse:
@@ -9,10 +9,10 @@ scenarios:
     beta_scaling:
       window_size: 42
       average_over_min: 7
-      average_over_max: 42
+      average_over_max: '/ihme/covid-19/seir-parameters/2020_09_09.02/seir_parameters.csv'
       offset_deaths_lower: 150
       offset_deaths_upper: 300
-    theta: '/ihme/covid-19/seir-pipeline-outputs/metadata-inputs/theta_2020_08_25.01.csv'
+    theta: '/ihme/covid-19/seir-parameters/2020_09_09.02/seir_parameters.csv'
     covariates:
       pneumonia: 'reference'
       mobility: 'reference'
@@ -33,10 +33,10 @@ scenarios:
     beta_scaling:
       window_size: 42
       average_over_min: 7
-      average_over_max: 42
+      average_over_max: '/ihme/covid-19/seir-parameters/2020_09_09.02/seir_parameters.csv'
       offset_deaths_lower: 150
       offset_deaths_upper: 300
-    theta: '/ihme/covid-19/seir-pipeline-outputs/metadata-inputs/theta_2020_08_25.01.csv'
+    theta: '/ihme/covid-19/seir-parameters/2020_09_09.02/seir_parameters.csv'
     covariates:
       pneumonia: 'reference'
       mobility: 'reference'
@@ -57,10 +57,10 @@ scenarios:
     beta_scaling:
       window_size: 42
       average_over_min: 7
-      average_over_max: 42
+      average_over_max: '/ihme/covid-19/seir-parameters/2020_09_09.02/seir_parameters.csv'
       offset_deaths_lower: 150
       offset_deaths_upper: 300
-    theta: '/ihme/covid-19/seir-pipeline-outputs/metadata-inputs/theta_2020_08_25.01.csv'
+    theta: '/ihme/covid-19/seir-parameters/2020_09_09.02/seir_parameters.csv'
     covariates:
       pneumonia: 'reference'
       mobility: 'reference'

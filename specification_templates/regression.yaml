@@ -1,13 +1,13 @@
 data:
-  infection_version: '2020_08_26.01'
-  covariate_version: '2020_08_27.04'
+  infection_version: '2020_09_01.02'
+  covariate_version: '2020_09_03.01'
   location_set_version_id: ''
   location_set_file: '/ihme/covid-19/seir-pipeline-outputs/metadata-inputs/location_metadata_771.csv'
   output_root: ''
 parameters:
   n_draws: 1000
   day_shift: [0, 8]
-  alpha: [0.9, 1.0]
+  alpha: '/ihme/covid-19/seir-parameters/2020_09_09.02/seir_parameters.csv'
   sigma: [0.2, 0.3333]
   gamma1: [0.5, 0.5]
   gamma2: [0.3333, 1.0]
@@ -90,4 +90,3 @@ covariates:
     bounds: [0.0, 1000.0]
     re_var: 1.0
     draws: False
-
